@@ -2,7 +2,7 @@ import click
 import pandas as pd
 from dotenv import load_dotenv
 
-from src import google_drive, health_connect, strava
+from src import google_drive, google_sheets, health_connect, strava
 
 load_dotenv()
 
@@ -95,6 +95,46 @@ def download_health_connect(filename: str, output: str):
     click.echo(f"Downloading to {output}...")
     google_drive.download_file(service, file_id, output)
     click.echo(f"✓ Downloaded to {output}")
+
+
+@cli.command("update-sheet")
+@click.argument("health_connect_zip", type=click.Path(exists=True))
+@click.option("--sheet-name", default="Automated training log", show_default=True, help="Name of Google Sheet")
+@click.option("--tab-name", default="Sheet1", show_default=True, help="Name of tab within the sheet")
+@click.option("--strava-limit", default=100, show_default=True, help="Number of Strava activities to fetch")
+def update_sheet(health_connect_zip: str, sheet_name: str, tab_name: str, strava_limit: int):
+    """Update Google Sheet with merged daily statistics."""
+    with health_connect.HealthConnect(health_connect_zip) as hc:
+        hc_stats = hc.daily_stats()[['weight_lbs', 'distance_miles', 'distance_miles_7d_sum']]
+    
+    client = strava.get_client()
+    strava_stats = strava.daily_runs(client, limit=strava_limit)
+    
+    combined = pd.merge(
+        hc_stats,
+        strava_stats,
+        left_index=True,
+        right_index=True,
+        how='outer',
+        suffixes=('_hc', '_strava')
+    ).sort_index()
+    
+    combined = combined[combined.index >= pd.to_datetime('2025-01-01').date()]
+    
+    sheets_service = google_sheets.get_sheets_service()
+    
+    click.echo(f"Finding spreadsheet '{sheet_name}'...")
+    spreadsheet_id = google_sheets.find_spreadsheet_by_name(sheets_service, sheet_name)
+    
+    if not spreadsheet_id:
+        click.echo(f"Error: Spreadsheet '{sheet_name}' not found")
+        click.echo("Make sure the sheet is shared with your service account")
+        raise click.Abort()
+    
+    click.echo(f"Found spreadsheet (ID: {spreadsheet_id})")
+    click.echo(f"Writing {len(combined)} rows to '{tab_name}'...")
+    google_sheets.write_dataframe(sheets_service, spreadsheet_id, tab_name, combined)
+    click.echo("✓ Sheet updated successfully")
 
 
 if __name__ == "__main__":
