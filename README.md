@@ -29,12 +29,15 @@ Maintain a single, consolidated view of all training metrics to track progress t
 ✅ **Working**
 - Health Connect data extraction and daily aggregation
 - Strava API integration with token refresh
+- Google Drive integration (download Health Connect zip)
+- Google Sheets output writer (basic overwrite mode)
+- GitHub Actions authentication via Workload Identity
 - CLI for local testing
 
 ⏳ **Next Steps**
-- Google Drive integration (read/write)
-- Google Sheets output writer
-- GitHub Actions automation
+- Strava token storage solution for GitHub Actions
+- Incremental Google Sheets updates (preserve user columns, better headers)
+- Full automated pipeline
 
 ## Setup
 
@@ -96,9 +99,9 @@ uv run fitness run
 ## TODO
 
 ### High Priority
-- [ ] Google Drive integration (read Health Connect zip, store Strava tokens)
-- [ ] Google Sheets output writer
-- [ ] GitHub Actions workflow for daily runs
+- [ ] Strava token storage/refresh solution for GitHub Actions
+- [ ] Incremental Google Sheets ETL (preserve user-added columns, improve headers)
+- [ ] Full automated daily pipeline workflow
 - [ ] Unit tests
 
 ### Future Enhancements
