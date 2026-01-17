@@ -67,12 +67,14 @@ Get Strava credentials at https://www.strava.com/settings/api
 ### Test with Local Data
 
 ```bash
-# Show database contents
+# Health Connect
 uv run fitness health-connect show-tables "data/Health Connect.zip"
-
-# View recent statistics
 uv run fitness health-connect show-daily-stats "data/Health Connect.zip"
 uv run fitness health-connect show-daily-stats "data/Health Connect.zip" --days 30
+
+# Strava
+uv run fitness strava show-runs
+uv run fitness strava show-runs --limit 30
 ```
 
 ### Run Pipeline (Coming Soon)
@@ -81,13 +83,22 @@ uv run fitness health-connect show-daily-stats "data/Health Connect.zip" --days 
 uv run fitness run
 ```
 
+## Development
+
+### Coding Standards
+
+- **Minimal code**: Every line has a maintenance cost - each must be worth it
+- **Comments/docstrings**: Only when they add value beyond names and types
+- **CLI**: Let errors crash with stack traces (no try/except wrapping)
+- **Options**: Use `show_default=True` for automatic default value display
+- **Units**: All unit conversions in `src/units.py`
+
 ## TODO
 
 ### High Priority
 - [ ] Google Drive integration (read Health Connect zip, store Strava tokens)
 - [ ] Google Sheets output writer
 - [ ] GitHub Actions workflow for daily runs
-- [ ] Incremental ETL: only fetch Strava activities since last known date
 - [ ] Unit tests
 
 ### Future Enhancements
