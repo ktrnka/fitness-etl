@@ -100,7 +100,8 @@ class HealthConnect:
         distance_series = self.daily_distance()
 
         # Merge the two series
-        merged_df = pd.merge(weight_series.reset_index(), distance_series.reset_index(), on="local_date", how="outer").sort_index()
+        merged_df = pd.merge(weight_series.reset_index(), distance_series.reset_index(), on="local_date", how="outer")
+        merged_df = merged_df.set_index("local_date").sort_index()
 
         # add cols for readability
         merged_df["weight_lbs"] = merged_df["weight"] * GRAMS_TO_POUNDS

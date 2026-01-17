@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "fitness-etl"
 version = "0.1.0"
-description = "Aggregates Seattle-area outdoor volunteer events into a compressed SQLite database and publishes a minimal static website"
+description = "ETL pipeline for consolidating fitness data from Google Health Connect and Strava to track marathon training progress"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -19,6 +19,7 @@ classifiers = [
 ]
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "click>=8.3.1",
     "pandas>=2.3.3",
     "python-dotenv",
     "stravalib",
