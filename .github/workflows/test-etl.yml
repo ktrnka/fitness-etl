@@ -36,7 +36,7 @@ jobs:
         run: mkdir -p data
       
       - name: Download Health Connect data
-        run: uv run fitness download-health-connect --credentials ${{ steps.auth.outputs.credentials_file_path }}
+        run: uv run fitness download-health-connect
       
       - name: Verify download
         run: ls -lh data/

@@ -1,3 +1,6 @@
+import os
+
+import google.auth
 import pandas as pd
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -10,16 +13,22 @@ SCOPES = [
 
 
 def get_sheets_service():
-    creds = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES
-    )
+    if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+        creds, _ = google.auth.default(scopes=SCOPES)
+    else:
+        creds = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE, scopes=SCOPES
+        )
     return build("sheets", "v4", credentials=creds)
 
 
 def find_spreadsheet_by_name(service, name: str) -> str | None:
-    creds = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES
-    )
+    if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+        creds, _ = google.auth.default(scopes=SCOPES)
+    else:
+        creds = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE, scopes=SCOPES
+        )
     drive_service = build("drive", "v3", credentials=creds)
     
     results = drive_service.files().list(
