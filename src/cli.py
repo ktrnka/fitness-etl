@@ -58,6 +58,29 @@ def show_runs(limit: int):
     runs_df = strava.daily_runs(client, limit=limit)
     click.echo(runs_df.to_string(float_format="%.1f"))
 
+@cli.command("daily-stats")
+@click.argument("health_connect_zip", type=click.Path(exists=True))
+@click.option("--days", default=14, show_default=True, help="Number of recent days to display")
+@click.option("--strava-limit", default=30, show_default=True, help="Number of Strava activities to fetch")
+def daily_stats(health_connect_zip: str, days: int, strava_limit: int):
+    """Show unified daily statistics from Health Connect and Strava."""
+    with health_connect.HealthConnect(health_connect_zip) as hc:
+        hc_stats = hc.daily_stats()[['weight_lbs', 'distance_miles', 'distance_miles_7d_sum']]
+    
+    client = strava.get_client()
+    strava_stats = strava.daily_runs(client, limit=strava_limit)
+    
+    combined = pd.merge(
+        hc_stats,
+        strava_stats,
+        left_index=True,
+        right_index=True,
+        how='outer',
+        suffixes=('_hc', '_strava')
+    ).sort_index()
+    
+    recent = combined.tail(days)
+    click.echo(recent.to_string(float_format='%.1f'))
 
 if __name__ == "__main__":
     cli()
