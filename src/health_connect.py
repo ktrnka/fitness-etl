@@ -114,32 +114,3 @@ class HealthConnect:
         merged_df["distance_km_7d_sum"] = merged_df["distance_km"].rolling(7).sum()
 
         return merged_df
-
-
-# with HealthConnect("/content/drive/MyDrive/Physical Training/Health Connect.zip") as hc:
-
-#     hc.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-#     tables = hc.cursor.fetchall()
-
-#     print("Tables in the database and their columns:")
-#     for table_name in tables:
-#         table_name = table_name[0]
-#         num_rows = hc.cursor.execute(f"SELECT COUNT(*) FROM {table_name};").fetchone()[0]
-#         if num_rows < 10:
-#             continue
-
-
-#         print(f"\nTable: {table_name}")
-#         print(f"Num rows: {num_rows}")
-#         hc.cursor.execute(f"PRAGMA table_info({table_name});")
-#         columns = hc.cursor.fetchall()
-#         if columns:
-#             for col in columns:
-#                 print(f"  Column: {col[1]} (Type: {col[2]}, Not Null: {bool(col[3])}, Primary Key: {bool(col[5])})")
-#         else:
-#             print("  No columns found (or table is empty/does not exist).")
-
-# with HealthConnect("/content/drive/MyDrive/Physical Training/Health Connect.zip") as hc:
-#     daily_stats = hc.daily_stats()
-
-# daily_stats.tail(20)
