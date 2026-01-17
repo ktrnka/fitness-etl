@@ -79,18 +79,19 @@ def daily_stats(health_connect_zip: str, days: int, strava_limit: int):
 @cli.command("download-health-connect")
 @click.option("--filename", default="Health Connect.zip", show_default=True, help="Name of file in Google Drive")
 @click.option("--output", default="data/Health Connect.zip", show_default=True, help="Local destination path")
-def download_health_connect(filename: str, output: str):
+@click.option("--credentials", default="google_service_account.json", show_default=True, help="Path to service account credentials file")
+def download_health_connect(filename: str, output: str, credentials: str):
     """Download Health Connect zip file from Google Drive."""
-    service = google_drive.get_drive_service()
-
+    service = google_drive.get_drive_service(credentials)
+    
     click.echo(f"Searching for '{filename}' in Google Drive...")
     file_id = google_drive.find_file_by_name(service, filename)
-
+    
     if not file_id:
         click.echo(f"Error: File '{filename}' not found in Google Drive")
         click.echo("Make sure the file is shared with your service account")
         raise click.Abort()
-
+    
     click.echo(f"Found file (ID: {file_id})")
     click.echo(f"Downloading to {output}...")
     google_drive.download_file(service, file_id, output)

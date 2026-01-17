@@ -1,0 +1,42 @@
+name: Test ETL
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-etl:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/1099243698582/locations/global/workloadIdentityPools/github/providers/fitness-etl
+          service_account: fitness-etl-service@fitness-etl.iam.gserviceaccount.com
+          create_credentials_file: true
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      
+      - name: Install dependencies
+        run: uv sync
+      
+      - name: Create data directory
+        run: mkdir -p data
+      
+      - name: Download Health Connect data
+        run: uv run fitness download-health-connect --credentials ${{ steps.auth.outputs.credentials_file_path }}
+      
+      - name: Verify download
+        run: ls -lh data/

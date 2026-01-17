@@ -9,8 +9,8 @@ SERVICE_ACCOUNT_FILE = "google_service_account.json"
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 
-def get_drive_service():
-    creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+def get_drive_service(credentials_file: str = SERVICE_ACCOUNT_FILE):
+    creds = service_account.Credentials.from_service_account_file(credentials_file, scopes=SCOPES)
     return build("drive", "v3", credentials=creds)
 
 
