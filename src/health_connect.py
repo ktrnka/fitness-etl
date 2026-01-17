@@ -6,9 +6,7 @@ from zipfile import ZipFile
 
 import pandas as pd
 
-# Conversion factors
-GRAMS_TO_POUNDS = 0.00220462
-METERS_TO_MILES = 0.000621371
+from src.units import GRAMS_TO_POUNDS, METERS_TO_MILES
 
 
 class HealthConnect:

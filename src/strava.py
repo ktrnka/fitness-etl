@@ -7,10 +7,9 @@ import pandas as pd
 from stravalib import Client
 from stravalib.protocol import AccessInfo
 
-credential_path = "strava_credentials.json"
+from src.units import METERS_PER_MILE, SECONDS_PER_MINUTE
 
-METERS_PER_MILE = 1609.34
-SECONDS_PER_MINUTE = 60
+credential_path = "strava_credentials.json"
 
 
 def save_credentials(access_token, refresh_token, expires_at):
