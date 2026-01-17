@@ -211,3 +211,4 @@ __marimo__/
 # Temp/local development
 data/**
 strava_credentials.json
+google_service_account.json
