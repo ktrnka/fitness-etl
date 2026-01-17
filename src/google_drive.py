@@ -1,20 +1,16 @@
 import io
 import os
 
-import google.auth
-from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
-SERVICE_ACCOUNT_FILE = "google_service_account.json"
+from src.google_auth_helper import get_credentials
+
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 
-def get_drive_service(credentials_file: str = SERVICE_ACCOUNT_FILE):
-    if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-        creds, _ = google.auth.default(scopes=SCOPES)
-    else:
-        creds = service_account.Credentials.from_service_account_file(credentials_file, scopes=SCOPES)
+def get_drive_service(credentials_file: str = "google_service_account.json"):
+    creds = get_credentials(SCOPES, credentials_file)
     return build("drive", "v3", credentials=creds)
 
 
