@@ -17,7 +17,7 @@ jobs:
       - id: auth
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: projects/1099243698582/locations/global/workloadIdentityPools/github/providers/fitness-etl
+          workload_identity_provider: projects/1099243698582/locations/global/workloadIdentityPools/github/providers/github
           service_account: fitness-etl-service@fitness-etl.iam.gserviceaccount.com
           create_credentials_file: true
       
