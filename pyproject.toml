@@ -19,27 +19,15 @@ classifiers = [
 ]
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "beautifulsoup4",
-    "requests",
-    "pydantic",
-    "click",
-    "jinja2",
-    "staticjinja",
-    "sqlalchemy",
-    "python-dateutil",
+    "pandas>=2.3.3",
     "python-dotenv",
-    "pyyaml",
-    "splink",
-    "rapidfuzz",
-    "openai>=1.98.0",
+    "stravalib",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "pytest-cov",
     "ruff",
-    "vulture",
 ]
 
 [project.scripts]
