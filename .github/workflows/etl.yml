@@ -1,0 +1,37 @@
+name: ETL
+
+on:
+  schedule:
+    - cron:  '0 7 * * *'   # 07:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  run-etl:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # for committing changes
+      models: read # for accessing Github models
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version-file: "pyproject.toml"
+    
+    - name: Install the project
+      run: uv sync --locked
+    
+    - name: Run ETL pipeline
+      run: uv run seattle-volunteering pipeline
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+    
+    - name: Commit DB and site
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: 'data/events.sqlite.gz docs/index.html'
+        message: 'chore(data): nightly DB and site update'
