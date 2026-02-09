@@ -4,7 +4,7 @@ ETL pipeline for consolidating fitness data from multiple sources to track marat
 
 ## Overview
 
-Training for a marathon in Fall 2026. This pipeline consolidates fragmented fitness data from Google Health Connect and Strava into a unified Google Sheet for consistent tracking. The pipeline runs daily via GitHub Actions to provide an up-to-date view of training metrics.
+Training for a marathon in Fall 2026. This pipeline consolidates fragmented fitness data from Google Health Connect and Strava into a unified Google Sheet for consistent tracking.
 
 ### Data Sources
 
@@ -31,7 +31,6 @@ Maintain a single, consolidated view of all training metrics to track progress t
 - Strava API integration with token refresh
 - Google Drive integration (download Health Connect zip)
 - Google Sheets output writer (basic overwrite mode)
-- GitHub Actions authentication via Workload Identity
 - CLI for local testing
 
 ⏳ **Next Steps**
@@ -80,7 +79,7 @@ uv run fitness strava show-runs
 uv run fitness strava show-runs --limit 30
 ```
 
-### Run Pipeline (Coming Soon)
+### Run Pipeline
 
 ```bash
 uv run fitness run
@@ -101,7 +100,6 @@ uv run fitness run
 ### High Priority
 - [ ] Strava token storage/refresh solution for GitHub Actions
 - [ ] Incremental Google Sheets ETL (preserve user-added columns, improve headers)
-- [ ] Full automated daily pipeline workflow
 - [ ] Unit tests
 
 ### Future Enhancements

@@ -11,12 +11,12 @@ SCOPES = [
 
 def get_sheets_service():
     creds = get_credentials(SCOPES)
-    return build("sheets", "v4", credentials=creds)
+    return build("sheets", "v4", credentials=creds, cache_discovery=False)
 
 
 def find_spreadsheet_by_name(service, name: str) -> str | None:
     creds = get_credentials(SCOPES)
-    drive_service = build("drive", "v3", credentials=creds)
+    drive_service = build("drive", "v3", credentials=creds, cache_discovery=False)
     
     results = drive_service.files().list(
         q=f"name='{name}' and mimeType='application/vnd.google-apps.spreadsheet'",

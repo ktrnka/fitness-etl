@@ -105,22 +105,7 @@ def download_health_connect(filename: str, output: str, credentials: str):
 @click.option("--strava-limit", default=100, show_default=True, help="Number of Strava activities to fetch")
 def update_sheet(health_connect_zip: str, sheet_name: str, tab_name: str, strava_limit: int):
     """Update Google Sheet with merged daily statistics."""
-    with health_connect.HealthConnect(health_connect_zip) as hc:
-        hc_stats = hc.daily_stats()[['weight_lbs', 'distance_miles', 'distance_miles_7d_sum']]
-    
-    client = strava.get_client()
-    strava_stats = strava.daily_runs(client, limit=strava_limit)
-    
-    combined = pd.merge(
-        hc_stats,
-        strava_stats,
-        left_index=True,
-        right_index=True,
-        how='outer',
-        suffixes=('_hc', '_strava')
-    ).sort_index()
-    
-    combined = combined[combined.index >= pd.to_datetime('2025-01-01').date()]
+    combined = load_combined_stats(health_connect_zip, strava_limit)
     
     sheets_service = google_sheets.get_sheets_service()
     
@@ -136,6 +121,66 @@ def update_sheet(health_connect_zip: str, sheet_name: str, tab_name: str, strava
     click.echo(f"Writing {len(combined)} rows to '{tab_name}'...")
     google_sheets.write_dataframe(sheets_service, spreadsheet_id, tab_name, combined)
     click.echo("✓ Sheet updated successfully")
+
+
+@cli.command("run")
+@click.option("--filename", default="Health Connect.zip", show_default=True, help="Name of file in Google Drive")
+@click.option("--output", default="data/Health Connect.zip", show_default=True, help="Local destination path")
+@click.option("--credentials", default="google_service_account.json", show_default=True, help="Path to service account credentials file")
+@click.option("--sheet-name", default="Automated training log", show_default=True, help="Name of Google Sheet")
+@click.option("--tab-name", default="Sheet1", show_default=True, help="Name of tab within the sheet")
+@click.option("--strava-limit", default=100, show_default=True, help="Number of Strava activities to fetch")
+def run_pipeline(filename: str, output: str, credentials: str, sheet_name: str, tab_name: str, strava_limit: int):
+    """Download Health Connect data and update the Google Sheet."""
+    service = google_drive.get_drive_service(credentials)
+
+    click.echo(f"Searching for '{filename}' in Google Drive...")
+    file_id = google_drive.find_file_by_name(service, filename)
+
+    if not file_id:
+        click.echo(f"Error: File '{filename}' not found in Google Drive")
+        click.echo("Make sure the file is shared with your service account")
+        raise click.Abort()
+
+    click.echo(f"Found file (ID: {file_id})")
+    click.echo(f"Downloading to {output}...")
+    google_drive.download_file(service, file_id, output)
+    click.echo(f"✓ Downloaded to {output}")
+
+    combined = load_combined_stats(output, strava_limit)
+    sheets_service = google_sheets.get_sheets_service()
+
+    click.echo(f"Finding spreadsheet '{sheet_name}'...")
+    spreadsheet_id = google_sheets.find_spreadsheet_by_name(sheets_service, sheet_name)
+
+    if not spreadsheet_id:
+        click.echo(f"Error: Spreadsheet '{sheet_name}' not found")
+        click.echo("Make sure the sheet is shared with your service account")
+        raise click.Abort()
+
+    click.echo(f"Found spreadsheet (ID: {spreadsheet_id})")
+    click.echo(f"Writing {len(combined)} rows to '{tab_name}'...")
+    google_sheets.write_dataframe(sheets_service, spreadsheet_id, tab_name, combined)
+    click.echo("✓ Sheet updated successfully")
+
+
+def load_combined_stats(health_connect_zip: str, strava_limit: int) -> pd.DataFrame:
+    with health_connect.HealthConnect(health_connect_zip) as hc:
+        hc_stats = hc.daily_stats()[["weight_lbs", "distance_miles", "distance_miles_7d_sum"]]
+
+    client = strava.get_client()
+    strava_stats = strava.daily_runs(client, limit=strava_limit)
+
+    combined = pd.merge(
+        hc_stats,
+        strava_stats,
+        left_index=True,
+        right_index=True,
+        how="outer",
+        suffixes=("_hc", "_strava"),
+    ).sort_index()
+
+    return combined[combined.index >= pd.to_datetime("2025-01-01").date()]
 
 
 if __name__ == "__main__":

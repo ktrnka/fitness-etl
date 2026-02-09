@@ -11,7 +11,7 @@ SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 def get_drive_service(credentials_file: str = "google_service_account.json"):
     creds = get_credentials(SCOPES, credentials_file)
-    return build("drive", "v3", credentials=creds)
+    return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
 def find_file_by_name(service, filename: str) -> str | None:
