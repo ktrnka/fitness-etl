@@ -1,6 +1,7 @@
 import click
 import pandas as pd
 from dotenv import load_dotenv
+from loguru import logger
 
 from src import google_drive, google_sheets, health_connect, strava
 
@@ -77,89 +78,57 @@ def daily_stats(health_connect_zip: str, days: int, strava_limit: int):
 
 
 @cli.command("download-health-connect")
-@click.option("--filename", default="Health Connect.zip", show_default=True, help="Name of file in Google Drive")
-@click.option("--output", default="data/Health Connect.zip", show_default=True, help="Local destination path")
+@click.option("--remote-healthconnect-filename", default="Health Connect.zip", show_default=True, help="Name of file in Google Drive")
+@click.option("--local-healthconnect-path", default="data/Health Connect.zip", show_default=True, help="Local destination path")
 @click.option("--credentials", default="google_service_account.json", show_default=True, help="Path to service account credentials file")
-def download_health_connect(filename: str, output: str, credentials: str):
+def download_health_connect(remote_healthconnect_filename: str, local_healthconnect_path: str, credentials: str):
     """Download Health Connect zip file from Google Drive."""
-    service = google_drive.get_drive_service(credentials)
-    
-    click.echo(f"Searching for '{filename}' in Google Drive...")
-    file_id = google_drive.find_file_by_name(service, filename)
-    
+    refresh_health_connect_file(credentials, remote_healthconnect_filename, local_healthconnect_path)
+
+
+def refresh_health_connect_file(
+    credentials_path: str = "google_service_account.json", remote_filename="Health Connect.zip", local_path="data/Health Connect.zip"
+) -> str:
+    service = google_drive.get_drive_service(credentials_path)
+
+    file_id = google_drive.find_file_by_name(service, remote_filename)
+
     if not file_id:
-        click.echo(f"Error: File '{filename}' not found in Google Drive")
-        click.echo("Make sure the file is shared with your service account")
+        logger.error(f"Error: File '{remote_filename}' not found in Google Drive")
         raise click.Abort()
-    
-    click.echo(f"Found file (ID: {file_id})")
-    click.echo(f"Downloading to {output}...")
-    google_drive.download_file(service, file_id, output)
-    click.echo(f"✓ Downloaded to {output}")
 
+    logger.debug(f"Found file (ID: {file_id}), downloading to {local_path}...")
+    google_drive.download_file(service, file_id, local_path)
 
-@cli.command("update-sheet")
-@click.argument("health_connect_zip", type=click.Path(exists=True))
-@click.option("--sheet-name", default="Automated training log", show_default=True, help="Name of Google Sheet")
-@click.option("--tab-name", default="Sheet1", show_default=True, help="Name of tab within the sheet")
-@click.option("--strava-limit", default=100, show_default=True, help="Number of Strava activities to fetch")
-def update_sheet(health_connect_zip: str, sheet_name: str, tab_name: str, strava_limit: int):
-    """Update Google Sheet with merged daily statistics."""
-    combined = load_combined_stats(health_connect_zip, strava_limit)
-    
-    sheets_service = google_sheets.get_sheets_service()
-    
-    click.echo(f"Finding spreadsheet '{sheet_name}'...")
-    spreadsheet_id = google_sheets.find_spreadsheet_by_name(sheets_service, sheet_name)
-    
-    if not spreadsheet_id:
-        click.echo(f"Error: Spreadsheet '{sheet_name}' not found")
-        click.echo("Make sure the sheet is shared with your service account")
-        raise click.Abort()
-    
-    click.echo(f"Found spreadsheet (ID: {spreadsheet_id})")
-    click.echo(f"Writing {len(combined)} rows to '{tab_name}'...")
-    google_sheets.write_dataframe(sheets_service, spreadsheet_id, tab_name, combined)
-    click.echo("✓ Sheet updated successfully")
+    return local_path
 
 
 @cli.command("run")
-@click.option("--filename", default="Health Connect.zip", show_default=True, help="Name of file in Google Drive")
-@click.option("--output", default="data/Health Connect.zip", show_default=True, help="Local destination path")
-@click.option("--credentials", default="google_service_account.json", show_default=True, help="Path to service account credentials file")
+@click.option("--remote-healthconnect-filename", default="Health Connect.zip", show_default=True, help="Name of file in Google Drive")
+@click.option("--local-healthconnect-path", default="data/Health Connect.zip", show_default=True, help="Local destination path")
 @click.option("--sheet-name", default="Automated training log", show_default=True, help="Name of Google Sheet")
 @click.option("--tab-name", default="Sheet1", show_default=True, help="Name of tab within the sheet")
 @click.option("--strava-limit", default=100, show_default=True, help="Number of Strava activities to fetch")
-def run_pipeline(filename: str, output: str, credentials: str, sheet_name: str, tab_name: str, strava_limit: int):
+@click.option("--credentials", default="google_service_account.json", show_default=True, help="Path to service account credentials file")
+def run_pipeline(
+    remote_healthconnect_filename: str, local_healthconnect_path: str, credentials: str, sheet_name: str, tab_name: str, strava_limit: int
+):
     """Download Health Connect data and update the Google Sheet."""
-    service = google_drive.get_drive_service(credentials)
+    healthconnect_path = refresh_health_connect_file(credentials, remote_healthconnect_filename, local_healthconnect_path)
 
-    click.echo(f"Searching for '{filename}' in Google Drive...")
-    file_id = google_drive.find_file_by_name(service, filename)
-
-    if not file_id:
-        click.echo(f"Error: File '{filename}' not found in Google Drive")
-        click.echo("Make sure the file is shared with your service account")
-        raise click.Abort()
-
-    click.echo(f"Found file (ID: {file_id})")
-    click.echo(f"Downloading to {output}...")
-    google_drive.download_file(service, file_id, output)
-    click.echo(f"✓ Downloaded to {output}")
-
-    combined = load_combined_stats(output, strava_limit)
+    combined = load_combined_stats(healthconnect_path, strava_limit)
     sheets_service = google_sheets.get_sheets_service()
+    drive_service = google_drive.get_drive_service(credentials)
 
-    click.echo(f"Finding spreadsheet '{sheet_name}'...")
-    spreadsheet_id = google_sheets.find_spreadsheet_by_name(sheets_service, sheet_name)
+    logger.debug(f"Finding spreadsheet '{sheet_name}'...")
+    spreadsheet_id = google_drive.find_file_by_name(drive_service, sheet_name, google_drive.FileTypes.SHEET)
 
     if not spreadsheet_id:
-        click.echo(f"Error: Spreadsheet '{sheet_name}' not found")
-        click.echo("Make sure the sheet is shared with your service account")
+        logger.error(f"Error: Spreadsheet '{sheet_name}' not found")
         raise click.Abort()
 
-    click.echo(f"Found spreadsheet (ID: {spreadsheet_id})")
-    click.echo(f"Writing {len(combined)} rows to '{tab_name}'...")
+    logger.debug(f"Found spreadsheet (ID: {spreadsheet_id})")
+    logger.debug(f"Writing {len(combined)} rows to '{tab_name}'...")
     google_sheets.write_dataframe(sheets_service, spreadsheet_id, tab_name, combined)
     click.echo("✓ Sheet updated successfully")
 

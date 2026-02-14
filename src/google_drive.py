@@ -1,12 +1,18 @@
 import io
 import os
+from enum import StrEnum
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
+from loguru import logger
 
 from src.google_auth_helper import get_credentials
 
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+
+
+class FileTypes(StrEnum):
+    SHEET = "application/vnd.google-apps.spreadsheet"
 
 
 def get_drive_service(credentials_file: str = "google_service_account.json"):
@@ -14,8 +20,11 @@ def get_drive_service(credentials_file: str = "google_service_account.json"):
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 
-def find_file_by_name(service, filename: str) -> str | None:
-    results = service.files().list(q=f"name='{filename}'", fields="files(id, name)").execute()
+def find_file_by_name(drive_service, filename: str, mime_type: str | None = None) -> str | None:
+    query = f"name='{filename}'"
+    if mime_type:
+        query += f" and mimeType='{mime_type}'"
+    results = drive_service.files().list(q=query, fields="files(id, name)").execute()
 
     files = results.get("files", [])
     if not files:
@@ -35,4 +44,4 @@ def download_file(service, file_id: str, destination_path: str):
         while not done:
             status, done = downloader.next_chunk()
             if status:
-                print(f"Download progress: {int(status.progress() * 100)}%")
+                logger.debug(f"Download progress: {int(status.progress() * 100)}%")
