@@ -3,6 +3,7 @@ import os
 import time
 from datetime import datetime, timedelta
 
+from loguru import logger
 import pandas as pd
 from stravalib import Client
 from stravalib.protocol import AccessInfo
@@ -36,21 +37,28 @@ def get_client() -> Client:
     os.environ["SILENCE_TOKEN_WARNINGS"] = "true"
 
     access_info = load_credentials()
-    client = Client(access_token=access_info["access_token"])
+    client = build_client(access_info["access_token"])
 
     if access_info["expires_at"] < time.time():
-        print("Refreshing access token")
+        logger.info("Refreshing access token")
         access_info = client.refresh_access_token(
             client_id=int(os.environ["STRAVA_CLIENT_ID"]),
             client_secret=os.environ["STRAVA_CLIENT_SECRET"],
             refresh_token=access_info["refresh_token"],
         )
         save_credentials(**access_info)
-        client = Client(access_token=access_info["access_token"])
+        client = build_client(access_info["access_token"])
 
     athlete = client.get_athlete()
-    print(f"Signed in as {athlete.firstname} {athlete.lastname}")
+    logger.debug(f"Signed in as {athlete.firstname} {athlete.lastname}")
 
+    return client
+
+def build_client(access_token: str) -> Client:
+    # This silences the auto-refresh warnings but I'm not really sure why
+    client = Client(access_token=access_token)
+    client.protocol.client_id = None
+    client.protocol.client_secret = None
     return client
 
 
