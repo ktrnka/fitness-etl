@@ -79,7 +79,7 @@ def daily_stats(health_connect_zip: str, days: int, strava_limit: int):
 
 @cli.command("download-health-connect")
 @click.option("--remote-healthconnect-filename", default="Health Connect.zip", show_default=True, help="Name of file in Google Drive")
-@click.option("--local-healthconnect-path", default="data/Health Connect.zip", show_default=True, help="Local destination path")
+@click.option("--local-healthconnect-path", default="../data/Health Connect.zip", show_default=True, help="Local destination path")
 @click.option("--credentials", default="google_service_account.json", show_default=True, help="Path to service account credentials file")
 def download_health_connect(remote_healthconnect_filename: str, local_healthconnect_path: str, credentials: str):
     """Download Health Connect zip file from Google Drive."""
@@ -87,7 +87,7 @@ def download_health_connect(remote_healthconnect_filename: str, local_healthconn
 
 
 def refresh_health_connect_file(
-    credentials_path: str = "google_service_account.json", remote_filename="Health Connect.zip", local_path="data/Health Connect.zip"
+    credentials_path: str = "google_service_account.json", remote_filename="Health Connect.zip", local_path="../data/Health Connect.zip"
 ) -> str:
     service = google_drive.get_drive_service(credentials_path)
 
@@ -105,7 +105,7 @@ def refresh_health_connect_file(
 
 @cli.command("run")
 @click.option("--remote-healthconnect-filename", default="Health Connect.zip", show_default=True, help="Name of file in Google Drive")
-@click.option("--local-healthconnect-path", default="data/Health Connect.zip", show_default=True, help="Local destination path")
+@click.option("--local-healthconnect-path", default="../data/Health Connect.zip", show_default=True, help="Local destination path")
 @click.option("--sheet-name", default="Automated training log", show_default=True, help="Name of Google Sheet")
 @click.option("--tab-name", default="Sheet1", show_default=True, help="Name of tab within the sheet")
 @click.option("--strava-limit", default=100, show_default=True, help="Number of Strava activities to fetch")
